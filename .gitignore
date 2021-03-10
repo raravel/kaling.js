@@ -1,0 +1,6 @@
+*.swp
+.git
+package-lock.json
+yarn.lock
+node_modules
+dist
