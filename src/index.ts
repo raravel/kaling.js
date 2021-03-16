@@ -5,11 +5,14 @@ import got from 'got';
 
 import fs from 'fs';
 
+const unescapeHTML = (str: string) => str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, '\'').replace(/&amp;/g, '&');
+
 export class KakaoLink {
 
 	private readonly SHARER_LINK: string = 'https://sharer.kakao.com';
 	private readonly TIARA_LINK: string = 'https://track.tiara.kakao.com';
 	private readonly ACCOUNT_LINK: string = 'https://accounts.kakao.com';
+	private readonly PICKER_LINK: string = `${this.SHARER_LINK}/talk/friends/picker/link`;
 	private readonly SDK_VERSION: string = '1.39.14';
 	private readonly connect: any = got.extend({
 		headers: {
@@ -19,7 +22,7 @@ export class KakaoLink {
 			beforeError: [
 				(error: any) => {
 					const { response } = error;
-					console.log(error, response.body);
+					console.log(response);
 					return error;
 				},
 			],
@@ -66,7 +69,9 @@ export class KakaoLink {
 		if ( cookie instanceof Array) {
 			cookies = cookie.map((c) => CookieParse(c).toJSON());
 		} else {
-			cookies = [ CookieParse(cookie).toJSON() ];
+			if ( cookie ) {
+				cookies = [ CookieParse(cookie).toJSON() ];
+			}
 		}
 
 		cookies.forEach((ck: Record<string, unknown>) => {
@@ -100,7 +105,10 @@ export class KakaoLink {
 
 	private async req(method: string, url: string, data: any = {}, opt: Record<string, unknown> = {}) {
 		method = method.toLowerCase();
-		opt['json'] = data;
+
+		if ( Object.keys(data).length ) {
+			opt['json'] = data;
+		}
 
 		const res = await this.connect[method](url, opt);
 		res.cookies = this.cooker(res.headers['set-cookie']);
@@ -120,7 +128,7 @@ export class KakaoLink {
 			};
 		}
 
-		return await this.req('POST',`${this.SHARER_LINK}/talk/friends/picker/link`, {
+		return await this.req('POST', this.PICKER_LINK, {
 			'app_key': this.key,
 			'validation_action': action,
 			'validation_params': JSON.stringify(params),
@@ -160,7 +168,7 @@ export class KakaoLink {
 			'authenticity_token': token,
 		}, {
 			headers: {
-				'referer': this.continue,
+				'Referer': this.continue,
 				'Cookie': this.cook(),
 			},
 		});
@@ -170,7 +178,7 @@ export class KakaoLink {
 		return this;
 	}
 
-	public async send(room_title: string, template: Record<string, unknown>) {
+	public async send(roomTitle: string, template: Record<string, unknown>) {
 		let res: any;
 
 		if ( !template['link_ver'] ) {
@@ -178,6 +186,44 @@ export class KakaoLink {
 		}
 
 		res = await this.picker('custom', template);
+
+		this.cooking(res.cookies, [ 'KSHARER', 'using' ]);
+
+		const tmpStr = res.data.match(/<input.*?value="(.*?)".*?id="validatedTalkLink".*?>/m)[1];
+		template = JSON.parse(unescapeHTML(tmpStr));
+
+		const token = res.data.match(/<div.*?ng-init="token='(.*?)'".*?>/m)[1];
+
+		res = await this.req('GET', `${this.SHARER_LINK}/api/talk/chats`, {}, {
+			headers: {
+				'Referer': this.PICKER_LINK,
+				'Csrf-Token': token,
+				'App-Key': this.key,
+				'Cookie': this.cook(),
+			},
+		});
+
+		const { securityKey, chats } = JSON.parse(res.data);
+		const room = chats.find((c: Record<string, unknown>) => c['title'] === roomTitle);
+
+		if ( !room ) return false;
+
+		res = await this.req('POST', `${this.SHARER_LINK}/api/talk/message/link`, {
+			'validatedTalkLink': template,
+			securityKey,
+			'receiverType': 'chat',
+			'receiverIds': [ room.id ],
+			'receiverChatRoomMemberCount': [ 1 ],
+		}, {
+			headers: {
+				'Referer': this.PICKER_LINK,
+				'Csrf-Token': token,
+				'App-Key': this.key,
+				'Cookie': this.cook([ '_kadu', 'TIARA', '_kawlt', '_kawltea', '_karmt', '_karmtea', 'KSHARER', 'using' ]),
+			},
+		});
+
+		return true;
 	}
 
 }
