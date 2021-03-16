@@ -1,6 +1,6 @@
 {
 	"name": "kaling.js",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"author": "raravel",
 	"license": "MIT",
 	"scripts": {
@@ -25,5 +25,17 @@
 		"crypto-js": "^4.0.0",
 		"got": "^11.8.2",
 		"tough-cookie": "^4.0.0"
-	}
+	},
+	"keywords": [
+		"kakao",
+		"kakaotalk",
+		"link",
+		"kakaolink",
+		"kaling",
+		"카카오",
+		"링크",
+		"카카오톡",
+		"카카오링크",
+		"카링"
+	]
 }
