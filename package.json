@@ -1,5 +1,5 @@
 {
-	"name": "typescript-template",
+	"name": "kaling.js",
 	"version": "1.0.0",
 	"author": "raravel",
 	"license": "MIT",
@@ -7,6 +7,11 @@
 		"dev": "nodemon --watch src --watch package.json --watch tsconfig.js --delay 1 --exec 'npm run lint --silent; ts-node' src/index.ts",
 		"lint": "tslint -p . --force",
 		"build": "tsc"
+	},
+	"homepage": "https://github.com/raravel/kaling.js#readme",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/raravel/kaling.js"
 	},
 	"devDependencies": {
 		"@types/crypto-js": "^4.0.1",
