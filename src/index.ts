@@ -5,6 +5,8 @@ import got from 'got';
 
 import fs from 'fs';
 
+type Json = Record<string, unknown>;
+
 const unescapeHTML = (str: string) => str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, '\'').replace(/&amp;/g, '&');
 
 export class KakaoLink {
@@ -32,7 +34,7 @@ export class KakaoLink {
 	private SDK_INFO: string = '';
 	private p: string = '';
 	private continue: string = '';
-	private cookie: Record<string, unknown> = {};
+	private cookie: Json = {};
 	private ver: string = '4.0';
 
 	constructor(private key: string, host: string, private userAgent: string = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36') {
@@ -74,7 +76,7 @@ export class KakaoLink {
 			}
 		}
 
-		cookies.forEach((ck: Record<string, unknown>) => {
+		cookies.forEach((ck: Json) => {
 			cook[ck.key as string] = {
 				value: ck.value,
 				domain: ck.domain,
@@ -98,12 +100,12 @@ export class KakaoLink {
 		return cookie.join('; ') + ';';
 	}
 
-	private cooking(cook: Record<string, unknown>, keys: string[]) {
+	private cooking(cook: Json, keys: string[]) {
 		keys.forEach((k: string) => this.cookie[k] = cook[k]);
 		return this.cookie;
 	}
 
-	private async req(method: string, url: string, data: any = {}, opt: Record<string, unknown> = {}) {
+	private async req(method: string, url: string, data: any = {}, opt: Json = {}) {
 		method = method.toLowerCase();
 
 		if ( Object.keys(data).length ) {
@@ -117,8 +119,8 @@ export class KakaoLink {
 		return res;
 	}
 
-	private async picker(action: string = 'default', params: Record<string, unknown> = {}) {
-		const opt: Record<string, unknown> = {};
+	private async picker(action: string = 'default', params: Json = {}) {
+		const opt: Json = {};
 
 		const cookie = this.cook([ '_kadu', 'TIARA', '_kawlt', '_kawltea', '_karmt', '_karmtea' ]);
 		if ( cookie && this.continue ) {
@@ -178,7 +180,7 @@ export class KakaoLink {
 		return this;
 	}
 
-	public async send(roomTitle: string, template: Record<string, unknown>) {
+	public async send(roomTitle: string, template: Json) {
 		let res: any;
 
 		if ( !template['link_ver'] ) {
@@ -204,7 +206,7 @@ export class KakaoLink {
 		});
 
 		const { securityKey, chats } = JSON.parse(res.data);
-		const room = chats.find((c: Record<string, unknown>) => c['title'] === roomTitle);
+		const room = chats.find((c: Json) => c['title'] === roomTitle);
 
 		if ( !room ) return false;
 
