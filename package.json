@@ -1,8 +1,10 @@
 {
 	"name": "kaling.js",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"author": "raravel",
 	"license": "MIT",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
 		"dev": "nodemon --watch src --watch package.json --watch tsconfig.js --delay 1 --exec 'npm run lint --silent; ts-node' src/index.ts",
 		"lint": "tslint -p . --force",
